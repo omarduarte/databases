@@ -32,11 +32,11 @@ exports.getAllFromTable = function(connection, query, callback) {
 };
 
 exports.insertIntoDB = function(connection, query, callback) {
-  connection.query(query, function(err) {
+  connection.query(query, function(err, result) {
     if (err) { throw err;}
 
     if (callback) {
-      callback();
+      callback(err, result);
     }
   });
 };
@@ -45,25 +45,34 @@ exports.closeConnection = function(connection) {
   connection.end();
 };
 
-exports.select = function() {
-
+exports.getMatchingField = function(connection, tablename, field, value, callback) {
+  connection.query('SELECT * FROM ' + tablename + ' WHERE '+ field + '=\'' + value + '\'' , function(err, rows) {
+    callback(err,rows);
+  });
 };
 
 exports.createWhenInexistent = function(connection, tablename, field, value, callback) {
-  connection.query('SELECT * FROM ' + tablename + ' WHERE '+ field + '=\'' + value + '\'' , function(err, rows) {
+  exports.getMatchingField(connection, tablename, field, value, function(err, rows) {
     if (err) { throw err;}
-
-    console.log('Printing rows', rows);
 
     if (rows.length === 0) {
       var query = 'INSERT INTO '+tablename+' ('+field+') VALUES (\''+value+'\')';
-      console.log('If there was no rows in the DB', query);
-      connection.query(query, function(err) {
-        if (err) { throw err; }
-        callback();
-      });
+      exports.insertIntoDB(connection, query, callback);
     } else {
       callback();
     }
   });
 };
+
+// exports.createWhenInexistent = function(connection, tablename, field, value, callback) {
+//   connection.query('SELECT * FROM ' + tablename + ' WHERE '+ field + '=\'' + value + '\'' , function(err, rows) {
+//     if (err) { throw err;}
+
+//     if (rows.length === 0) {
+//       var query = 'INSERT INTO '+tablename+' ('+field+') VALUES (\''+value+'\')';
+//       exports.insertIntoDB(connection, query, callback);
+//     } else {
+//       callback();
+//     }
+//   });
+// };
