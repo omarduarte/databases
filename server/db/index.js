@@ -1,4 +1,6 @@
 var mysql = require('mysql');
+var queries = require('../models/queries.js');
+var Promise = require('bluebird');
 
 // Create a database connection and export it from this file.
 // You will need to connect with the user "root", no password,
@@ -31,10 +33,10 @@ exports.getAllFromTable = function(connection, query, callback) {
     });
 };
 
-exports.insertIntoDB = function(connection, query, callback) {
+
+exports.queryDB = function(connection, query, callback) {
   connection.query(query, function(err, result) {
     if (err) { throw err; }
-
     callback(err, result);
   });
 };
@@ -44,7 +46,12 @@ exports.closeConnection = function(connection) {
 };
 
 exports.getMatchingField = function(connection, tablename, field, value, callback) {
-  connection.query('SELECT * FROM ' + tablename + ' WHERE '+ field + '=\'' + value + '\'' , function(err, rows) {
+  var query = queries.getAllMatchingTemplate({
+    tablename: tablename, 
+    field: field, 
+    value: value
+  });
+  connection.query(query , function(err, rows) {
     callback(err, rows);
   });
 };
@@ -54,23 +61,14 @@ exports.createWhenInexistent = function(connection, tablename, field, value, cal
     if (err) { throw err;}
 
     if (rows.length === 0) {
-      var query = 'INSERT INTO '+tablename+' ('+field+') VALUES (\''+value+'\')';
-      exports.insertIntoDB(connection, query, callback);
+      var query = queries.insertNewRowTemplate({
+        tablename: tablename, 
+        field: field, 
+        value: value
+      });
+      exports.queryDB(connection, query, callback);
     } else {
       callback(err, rows);
     }
   });
 };
-
-// exports.createWhenInexistent = function(connection, tablename, field, value, callback) {
-//   connection.query('SELECT * FROM ' + tablename + ' WHERE '+ field + '=\'' + value + '\'' , function(err, rows) {
-//     if (err) { throw err;}
-
-//     if (rows.length === 0) {
-//       var query = 'INSERT INTO '+tablename+' ('+field+') VALUES (\''+value+'\')';
-//       exports.insertIntoDB(connection, query, callback);
-//     } else {
-//       callback();
-//     }
-//   });
-// };

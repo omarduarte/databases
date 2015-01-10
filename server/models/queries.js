@@ -17,4 +17,8 @@ module.exports = {
     roomID: _.template("(SELECT DISTINCT(id) FROM rooms WHERE roomname='<%-roomname%>')"),
     content:  _.template("'<%-text%>'")
   },
+
+  getAllMatchingTemplate: _.template("SELECT * FROM <%= tablename %> WHERE <%= field %>='<%= value %>' "),
+
+  insertNewRowTemplate: _.template("INSERT INTO <%= tablename %> (<%= field %>) VALUES ('<%= value %>') ")
 };
