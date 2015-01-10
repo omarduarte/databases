@@ -1,16 +1,15 @@
 var db = require('../db');
 var _ = require('underscore');
+var queries = require('./queries.js');
 
 module.exports = {
   messages: {
-    queryAllMessages: 'SELECT messages.id, users.username, messages.content, rooms.roomname, messages.createdAt ' +
-                       'FROM messages ' +
-                       'JOIN users ON users.id = messages.u_id ' +
-                       'JOIN rooms ON rooms.id = messages.r_id ' +
-                       'ORDER BY createdAt DESC',
+
     get: function (callback) {
+
       var dbconnection = db.openConnection();
-      db.getAllFromTable(dbconnection, this.queryAllMessages, function(messages) {
+
+      db.getAllFromTable(dbconnection, queries.getAllMessages, function(err, messages) {
         var results = [];
         messages.forEach(function(message) {
           results.push({
@@ -21,31 +20,26 @@ module.exports = {
             createdAt: message.createdAt
           });
         });
-        callback(results);
+        callback(err, results);
         db.closeConnection(dbconnection);
       });
 
     },
-    insertMessageQuery: _.template("INSERT INTO messages "  +
-                        "(u_id, r_id, content) " +
-                        "VALUES (<%=userID%>,<%=roomID%>,<%=content%>)"),
-    insertionAttributes: {
-      userID: _.template("(SELECT DISTINCT(id) FROM users WHERE username='<%-username%>')"),
-      roomID: _.template("(SELECT DISTINCT(id) FROM rooms WHERE roomname='<%-roomname%>')"),
-      content:  _.template("'<%-text%>'")
-    },
+
     post: function (message, callback) {
       var dbconnection = db.openConnection();
+
       var attributes = {};
 
-      for (var key in this.insertionAttributes) {
-        attributes[key] = this.insertionAttributes[key](message);
+      for (var key in queries.getIDTemplates) {
+        attributes[key] = queries.getIDTemplates[key](message);
       }
 
-      var self = this;
+      var query = queries.insertMessageTemplate(attributes);
+
       db.createWhenInexistent(dbconnection, 'rooms', 'roomname', message.roomname, function() {
         db.createWhenInexistent(dbconnection, 'users', 'username', message.username, function() {
-          db.insertIntoDB(dbconnection, self.insertMessageQuery(attributes), callback);
+          db.insertIntoDB(dbconnection, query, callback);
           db.closeConnection(dbconnection);
         });
       });

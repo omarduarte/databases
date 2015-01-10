@@ -1,16 +1,18 @@
 var models = require('../models');
-var bluebird = require('bluebird');
+var promisify = require('bluebird').promisify;
 var response = require('../response-handler.js');
 
 
 module.exports = {
   messages: {
     get: function (req, res) {
+      var get = promisify(models.messages.get);
 
-      models.messages.get(function(attributes) {
-        var data = JSON.stringify({results: attributes});
-        response(res, data, 200);
-      });
+      get()
+      .then(function(data) {
+        response(res, JSON.stringify({results: data}), 200);
+      })
+      .catch(function(err){ throw err;});
 
     }, // a function which handles a get request for all messages
     post: function (req, res) {
@@ -20,9 +22,12 @@ module.exports = {
         roomname: req.param('roomname')
       };
 
-      models.messages.post(message, function(err, result){
+      var post = promisify(models.messages.post);
+
+      post(message).then(function(result) {
         response(res, JSON.stringify(result.insertId), 201);
-      });
+      })
+      .catch(function(err){ throw err;});
 
     } // a function which handles posting a message to the database
   },

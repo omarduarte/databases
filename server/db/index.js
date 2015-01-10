@@ -27,17 +27,15 @@ exports.openConnection = function() {
 exports.getAllFromTable = function(connection, query, callback) {
     connection.query(query, function(err, rows) {
       if (err) { throw err; }
-      callback(rows);
+      callback(err, rows);
     });
 };
 
 exports.insertIntoDB = function(connection, query, callback) {
   connection.query(query, function(err, result) {
-    if (err) { throw err;}
+    if (err) { throw err; }
 
-    if (callback) {
-      callback(err, result);
-    }
+    callback(err, result);
   });
 };
 
@@ -47,7 +45,7 @@ exports.closeConnection = function(connection) {
 
 exports.getMatchingField = function(connection, tablename, field, value, callback) {
   connection.query('SELECT * FROM ' + tablename + ' WHERE '+ field + '=\'' + value + '\'' , function(err, rows) {
-    callback(err,rows);
+    callback(err, rows);
   });
 };
 
@@ -59,7 +57,7 @@ exports.createWhenInexistent = function(connection, tablename, field, value, cal
       var query = 'INSERT INTO '+tablename+' ('+field+') VALUES (\''+value+'\')';
       exports.insertIntoDB(connection, query, callback);
     } else {
-      callback();
+      callback(err, rows);
     }
   });
 };
