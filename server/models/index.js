@@ -1,4 +1,5 @@
 var db = require('../db');
+var _ = require('underscore');
 
 module.exports = {
   messages: {
@@ -19,12 +20,33 @@ module.exports = {
           });
         });
         callback(results);
+        db.closeConnection(dbconnection);
       });
 
-      db.closeConnection(dbconnection);
     }, // a function which produces all the messages
-    insertMessageQuery: 'INSERT ',
-    post: function () {} // a function which can be used to insert a message into the database
+    insertMessageQuery: _.template("INSERT INTO messages "  +
+                        "(u_id, r_id, content) " +
+                        "VALUES (<%=userID%>,<%=roomID%>,<%=content%>)"),
+    insertionAttributes: {
+      userID: _.template("(SELECT DISTINCT(id) FROM users WHERE username='<%=username%>')"),
+      roomID: _.template("(SELECT DISTINCT(id) FROM rooms WHERE roomname='<%=roomname%>')"),
+      content:  _.template("'<%=message%>'")
+    },
+    post: function (message, callback) {
+      var dbconnection = db.openConnection();
+      var attributes = {};
+      for (var key in this.insertionAttributes) {
+        attributes[key] = this.insertionAttributes[key](message);
+      }
+      //console.log(this.insertMessageQuery(attributes));
+      var self = this;
+      db.createWhenInexistent(dbconnection, 'rooms', 'roomname', message.roomname, function() {
+        db.createWhenInexistent(dbconnection, 'users', 'username', message.username, function() {
+          db.insertIntoDB(dbconnection, self.insertMessageQuery(attributes), callback);
+          db.closeConnection(dbconnection);
+        });
+      });
+    } // a function which can be used to insert a message into the database
   },
 
   users: {

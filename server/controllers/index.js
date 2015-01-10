@@ -9,9 +9,15 @@ module.exports = {
       models.messages.get(function(attributes) {
         console.log(attributes);
       });
+
+      // models.messages.post({
+      //   username: 'New User',
+      //   roomname: 'New Room',
+      //   message: 'Is Anyone Here?'
+      // }, function(){});
+      res.end();
     }, // a function which handles a get request for all messages
     post: function (req, res) {
-      // models.messages.post();
     } // a function which handles posting a message to the database
   },
 
