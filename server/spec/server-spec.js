@@ -12,7 +12,8 @@ describe("Persistent Node Chat Server", function() {
     dbConnection = mysql.createConnection({
       user: "root",
       password: "1234",
-      database: "chat"
+      database: "chat",
+      multipleStatements: "true"
     });
     dbConnection.connect();
 
@@ -38,7 +39,7 @@ describe("Persistent Node Chat Server", function() {
               uri: "http://127.0.0.1:3000/classes/messages",
               json: {
                 username: "Valjean",
-                message: "In mercy's name, three days is all I need.",
+                text: "In mercy's name, three days is all I need.",
                 roomname: "Hello"
               }
       }, function () {
@@ -63,13 +64,14 @@ describe("Persistent Node Chat Server", function() {
     });
   });
 
+      // mysql> delete from users; delete from messages; delete from rooms;
+
   it("Should output all messages from the DB", function(done) {
     // Let's insert a message into the db
     //
       var query1 = "INSERT INTO users (username) VALUE ('omar');";
       var query2 = "INSERT INTO rooms (roomname) VALUE ('Champagne Room');";
-      var query3 = "INSERT INTO messages (u_id, r_id, content) VALUES ( (SELECT DISTINCT(id) from users a WHERE a.username = 'omar'), (SELECT DISTINCT(id) FROM rooms b WHERE b.roomname='Champagne Room'), 'Men like you can never change!');";
-       var queryString = query1 + query2 + query3;
+      var query3 = "INSERT INTO messages (u_id, r_id, content) VALUES ( (SELECT DISTINCT(id) from users WHERE username='omar'), (SELECT DISTINCT(id) FROM rooms WHERE roomname='Champagne Room'), 'Men like you can never change!');";
         //1 - Insert into users:      user's name
         //2 - insert into rooms:      room's name
         //3 - Insert into messages :  content of message,
@@ -79,16 +81,24 @@ describe("Persistent Node Chat Server", function() {
     // here depend on the schema you design, so I'll leave
     // them up to you. */
 
-    dbConnection.query(queryString, queryArgs, function(err) {
+    dbConnection.query(query1, queryArgs, function(err) {
       if (err) { throw err; }
 
-      // Now query the Node chat server and see if it returns
-      // the message we just inserted:
-      request("http://127.0.0.1:3000/classes/messages", function(error, response, body) {
-        var messageLog = JSON.parse(body);
-        expect(messageLog[0].message).to.equal("Men like you can never change!");
-        expect(messageLog[0].roomname).to.equal("Champagne Room");
-        done();
+      dbConnection.query(query2, queryArgs, function(err) {
+        if (err) { throw err; }
+
+        dbConnection.query(query3, queryArgs, function(err) {
+          if (err) { throw err; }
+
+          // Now query the Node chat server and see if it returns
+          // the message we just inserted:
+          request("http://127.0.0.1:3000/classes/messages", function(error, response, body) {
+            var messageLog = JSON.parse(body).results;
+            expect(messageLog[0].text).to.equal("Men like you can never change!");
+            expect(messageLog[0].roomname).to.equal("Champagne Room");
+            done();
+          });
+        });
       });
     });
   });

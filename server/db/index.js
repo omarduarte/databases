@@ -47,8 +47,8 @@ exports.closeConnection = function(connection) {
 
 exports.getMatchingField = function(connection, tablename, field, value, callback) {
   var query = queries.getAllMatchingTemplate({
-    tablename: tablename, 
-    field: field, 
+    tablename: tablename,
+    field: field,
     value: value
   });
   connection.query(query , function(err, rows) {
@@ -56,14 +56,14 @@ exports.getMatchingField = function(connection, tablename, field, value, callbac
   });
 };
 
-exports.createWhenInexistent = function(connection, tablename, field, value, callback) {
+exports.createWhenNonexistent = function(connection, tablename, field, value, callback) {
   exports.getMatchingField(connection, tablename, field, value, function(err, rows) {
     if (err) { throw err;}
 
     if (rows.length === 0) {
       var query = queries.insertNewRowTemplate({
-        tablename: tablename, 
-        field: field, 
+        tablename: tablename,
+        field: field,
         value: value
       });
       exports.queryDB(connection, query, callback);

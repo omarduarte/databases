@@ -22,12 +22,19 @@ module.exports = {
         roomname: req.param('roomname')
       };
 
-      var post = promisify(models.messages.post);
-
-      post(message).then(function(result) {
+      models.messages.post(message, function(err, result) {
+        if (err) { throw err; }
         response(res, JSON.stringify(result.insertId), 201);
-      })
-      .catch(function(err){ throw err;});
+      });
+
+      // Promises don't seem to work with posts now...
+      // var post = promisify(models.messages.post);
+
+      // post(message)
+      //   .then(function(result) {
+      //     response(res, JSON.stringify(result.insertId), 201);
+      //   })
+      //   .catch(function(err){ throw err;});
 
     } // a function which handles posting a message to the database
   },
