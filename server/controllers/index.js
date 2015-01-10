@@ -6,7 +6,9 @@ var bluebird = require('bluebird');
 module.exports = {
   messages: {
     get: function (req, res) {
-      models.messages.get();
+      models.messages.get(function(attributes) {
+        console.log(attributes);
+      });
     }, // a function which handles a get request for all messages
     post: function (req, res) {
       // models.messages.post();

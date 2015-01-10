@@ -5,7 +5,6 @@ var mysql = require('mysql');
 // and to the database "chat".
 
 
-
 exports.openConnection = function() {
 
   var dbConnection = mysql.createConnection({
@@ -25,6 +24,21 @@ exports.openConnection = function() {
   return dbConnection;
 };
 
+exports.getAllFromTable = function(connection, query, callback) {
+    connection.query(query, function(err, rows) {
+      if (err) { throw err; }
+      callback(rows);
+    });
+};
+
+exports.insertIntoDB = function(connection, query, callback) {
+  connection.query(query, callback);
+};
+
 exports.closeConnection = function(connection) {
   connection.end();
+};
+
+exports.select = function() {
+
 };

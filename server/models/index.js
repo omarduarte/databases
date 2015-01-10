@@ -1,15 +1,29 @@
 var db = require('../db');
 
-
-
-
 module.exports = {
   messages: {
-    get: function () {
+    queryAllMessages: 'SELECT messages.id, users.username, messages.content, rooms.roomname, messages.createdAt ' +
+                       'FROM messages ' +
+                       'JOIN users ON users.id = messages.u_id ' +
+                       'JOIN rooms ON rooms.id = messages.r_id',
+    get: function (callback) {
+      var dbconnection = db.openConnection();
+      db.getAllFromTable(dbconnection, this.queryAllMessages, function(messages) {
+        var results = [];
+        messages.forEach(function(message) {
+          results.push({
+            objectId: message.id,
+            username: message.username,
+            roomname: message.roomname,
+            createdAt: message.createdAt
+          });
+        });
+        callback(results);
+      });
 
-      console.log('About to call db.sendToDB');
-      db.sendToDB(function(){console.log('called sendToDB');});
+      db.closeConnection(dbconnection);
     }, // a function which produces all the messages
+    insertMessageQuery: 'INSERT ',
     post: function () {} // a function which can be used to insert a message into the database
   },
 
@@ -19,4 +33,3 @@ module.exports = {
     post: function () {}
   }
 };
-
