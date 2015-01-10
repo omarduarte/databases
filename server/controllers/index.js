@@ -12,7 +12,7 @@ module.exports = {
       .then(function(data) {
         response(res, JSON.stringify({results: data}), 200);
       })
-      .catch(function(err){ throw err;});
+      .catch(function(err) { throw err; });
 
     }, // a function which handles a get request for all messages
     post: function (req, res) {
